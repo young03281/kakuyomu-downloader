@@ -10,13 +10,14 @@
 
 size_t write_callback(char *ptr, size_t size, size_t nmemb, void *userdata);
 
-std::fstream download(std::string episode);
+void download(std::string episode);
 
 
 int main(){
     std::filesystem::create_directory("outputs");
     int i = 0;
-    std::fstream file = download("/works/1177354054894027232/episodes/1177354054894027298");
+    std::fstream file;
+    download("/works/1177354054894027232/episodes/1177354054894027298");
     while(1){
         file.open("output.html", std::ios::in);
         file.seekg(0);
@@ -66,7 +67,7 @@ int main(){
             break;
         }
         file.close();
-        file = download(episode);
+        download(episode);
         i = 0;
     }
     return 0;
@@ -78,7 +79,7 @@ size_t write_callback(char *ptr, size_t size, size_t nmemb, void *userdata){
     return size * nmemb;
 }
 
-std::fstream download(std::string episode){
+void download(std::string episode){
     std::string url = "https://kakuyomu.jp";
 
     std::fstream file;
@@ -90,23 +91,17 @@ std::fstream download(std::string episode){
 
     char error[CURL_ERROR_SIZE];
 
-    curl_global_init(CURL_GLOBAL_ALL);
-
     curl_easy_setopt(curl, CURLOPT_URL, (url + episode).c_str());
     curl_easy_setopt(curl, CURLOPT_HTTPGET, "/");
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &file);
     curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, error);
-    //curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+    curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
     curl_easy_setopt(curl, CURLOPT_CAINFO, "cacert.pem");
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
     curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; WOW64) Chrome/51.0.2704.103");
 
     curl_easy_perform(curl);
     curl_easy_cleanup(curl);
-    curl_global_cleanup();
     file.close();
-
-    return file;
-
 }
